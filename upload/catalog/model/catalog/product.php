@@ -123,7 +123,17 @@ class ModelCatalogProduct extends Model {
 			}
 
 			if (!empty($data['filter_tag'])) {
-				$sql .= "pd.tag LIKE '%" . $this->db->escape($data['filter_tag']) . "%'";
+				$implode = array();
+
+				$words = explode(' ', trim(preg_replace('/\s+/', ' ', $data['filter_tag'])));
+
+				foreach ($words as $word) {
+					$implode[] = "pd.tag LIKE '%" . $this->db->escape($word) . "%'";
+				}
+
+				if ($implode) {
+					$sql .= " " . implode(" AND ", $implode) . "";
+				}
 			}
 
 			if (!empty($data['filter_name'])) {
@@ -263,14 +273,18 @@ class ModelCatalogProduct extends Model {
 	}
 
 	public function getPopularProducts($limit) {
-		$product_data = array();
-
-		$query = $this->db->query("SELECT p.product_id FROM " . DB_PREFIX . "product p LEFT JOIN " . DB_PREFIX . "product_to_store p2s ON (p.product_id = p2s.product_id) WHERE p.status = '1' AND p.date_available <= NOW() AND p2s.store_id = '" . (int)$this->config->get('config_store_id') . "' ORDER BY p.viewed DESC, p.date_added DESC LIMIT " . (int)$limit);
-
-		foreach ($query->rows as $result) {
-			$product_data[$result['product_id']] = $this->getProduct($result['product_id']);
+		$product_data = $this->cache->get('product.popular.' . (int)$this->config->get('config_language_id') . '.' . (int)$this->config->get('config_store_id') . '.' . $this->config->get('config_customer_group_id') . '.' . (int)$limit);
+	
+		if (!$product_data) {
+			$query = $this->db->query("SELECT p.product_id FROM " . DB_PREFIX . "product p LEFT JOIN " . DB_PREFIX . "product_to_store p2s ON (p.product_id = p2s.product_id) WHERE p.status = '1' AND p.date_available <= NOW() AND p2s.store_id = '" . (int)$this->config->get('config_store_id') . "' ORDER BY p.viewed DESC, p.date_added DESC LIMIT " . (int)$limit);
+	
+			foreach ($query->rows as $result) {
+				$product_data[$result['product_id']] = $this->getProduct($result['product_id']);
+			}
+			
+			$this->cache->set('product.popular.' . (int)$this->config->get('config_language_id') . '.' . (int)$this->config->get('config_store_id') . '.' . $this->config->get('config_customer_group_id') . '.' . (int)$limit, $product_data);
 		}
-
+		
 		return $product_data;
 	}
 
@@ -466,7 +480,17 @@ class ModelCatalogProduct extends Model {
 			}
 
 			if (!empty($data['filter_tag'])) {
-				$sql .= "pd.tag LIKE '%" . $this->db->escape(utf8_strtolower($data['filter_tag'])) . "%'";
+				$implode = array();
+
+				$words = explode(' ', trim(preg_replace('/\s+/', ' ', $data['filter_tag'])));
+
+				foreach ($words as $word) {
+					$implode[] = "pd.tag LIKE '%" . $this->db->escape($word) . "%'";
+				}
+
+				if ($implode) {
+					$sql .= " " . implode(" AND ", $implode) . "";
+				}
 			}
 
 			if (!empty($data['filter_name'])) {

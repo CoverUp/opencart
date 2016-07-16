@@ -102,7 +102,7 @@ class Mail {
 		
 		$header .= 'Return-Path: ' . $this->from . PHP_EOL;
 		$header .= 'X-Mailer: PHP/' . phpversion() . PHP_EOL;
-		$header .= 'Content-Type: multipart/related; boundary="' . $boundary . '"' . PHP_EOL . PHP_EOL;
+		$header .= 'Content-Type: multipart/mixed; boundary="' . $boundary . '"' . PHP_EOL . PHP_EOL;
 
 		if (!$this->html) {
 			$message  = '--' . $boundary . PHP_EOL;
@@ -141,8 +141,8 @@ class Mail {
 				$message .= 'Content-Type: application/octet-stream; name="' . basename($attachment) . '"' . PHP_EOL;
 				$message .= 'Content-Transfer-Encoding: base64' . PHP_EOL;
 				$message .= 'Content-Disposition: attachment; filename="' . basename($attachment) . '"' . PHP_EOL;
-				$message .= 'Content-ID: <' . basename(urlencode($attachment)) . '>' . PHP_EOL;
-				$message .= 'X-Attachment-Id: ' . basename(urlencode($attachment)) . PHP_EOL . PHP_EOL;
+				$message .= 'Content-ID: <' . urlencode(basename($attachment)) . '>' . PHP_EOL;
+				$message .= 'X-Attachment-Id: ' . urlencode(basename($attachment)) . PHP_EOL . PHP_EOL;
 				$message .= chunk_split(base64_encode($content));
 			}
 		}
